@@ -1,11 +1,9 @@
 package com.hospital.patientservice.dto;
-
 import lombok.Builder;
 import lombok.Data;
 import java.util.Date;
 
-@Data
-@Builder
+@Data @Builder
 public class PatientProfileDTO {
     private Long id;
     private String firstName;

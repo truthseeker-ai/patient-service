@@ -1,5 +1,4 @@
 package com.hospital.patientservice.dto;
-
 import lombok.Data;
 import java.util.Date;
 
@@ -13,4 +12,5 @@ public class RegistrationRequest {
     private Date dateOfBirth;
     private String gender;
     private String address;
+    private String medicalHistory;
 }
