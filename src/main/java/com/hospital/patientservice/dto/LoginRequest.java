@@ -1,4 +1,5 @@
 package com.hospital.patientservice.dto;
+
 import lombok.Data;
 
 @Data

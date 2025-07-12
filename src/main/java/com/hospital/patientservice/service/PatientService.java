@@ -5,56 +5,65 @@ import com.hospital.patientservice.entity.Patient;
 import com.hospital.patientservice.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PatientService {
-
-    private final PatientRepository patientRepository;
-    private final RestTemplate restTemplate;
-
-    private final String doctorServiceUrl = "http://localhost:8082";
+    private final PatientRepository repo;
 
     public PatientProfileDTO register(RegistrationRequest req) {
-        Patient p = new Patient();
-        p.setFirstName(req.getFirstName());
-        p.setLastName(req.getLastName());
-        p.setEmail(req.getEmail());
-        p.setPassword(req.getPassword());
-        p.setPhone(req.getPhone());
-        p.setDateOfBirth(req.getDateOfBirth());
-        p.setGender(req.getGender());
-        p.setAddress(req.getAddress());
-        p.setMedicalHistory(req.getMedicalHistory());
-        p = patientRepository.save(p);
-        return toDto(p);
+        repo.findByEmail(req.getEmail())
+                .ifPresent(p -> { throw new RuntimeException("Email already exists"); });
+
+        Patient p = Patient.builder()
+                .firstName(req.getFirstName())
+                .lastName(req.getLastName())
+                .email(req.getEmail())
+                .password(req.getPassword())
+                .phone(req.getPhone())
+                .dateOfBirth(req.getDateOfBirth())
+                .gender(req.getGender())
+                .address(req.getAddress())
+                .medicalHistory(req.getMedicalHistory())
+                .build();
+
+        return toDto(repo.save(p));
     }
 
     public PatientProfileDTO login(LoginRequest req) {
-        Patient p = patientRepository.findByEmailAndPassword(req.getEmail(), req.getPassword())
+        Patient p = repo.findByEmailAndPassword(req.getEmail(), req.getPassword())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
         return toDto(p);
     }
 
     public List<PatientProfileDTO> getAllPatients() {
-        return patientRepository.findAll().stream()
+        return repo.findAll().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    public List<DoctorDTO> searchDoctors(String name, String specialization) {
-        DoctorDTO[] arr = restTemplate.getForObject(
-                doctorServiceUrl + "/api/doctors", DoctorDTO[].class
-        );
-        return List.of(arr).stream()
-                .filter(d -> (name == null || d.getFirstName().toLowerCase().contains(name.toLowerCase()))
-                        && (specialization == null || d.getSpecialization().toLowerCase().contains(specialization.toLowerCase())))
-                .collect(Collectors.toList());
+    public PatientProfileDTO getPatient(Long id) {
+        Patient p = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+        return toDto(p);
+    }
+
+    public PatientProfileDTO updatePatient(Long id, RegistrationRequest req) {
+        Patient p = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+        p.setFirstName(req.getFirstName());
+        p.setLastName(req.getLastName());
+        p.setPhone(req.getPhone());
+        p.setAddress(req.getAddress());
+        p.setMedicalHistory(req.getMedicalHistory());
+        return toDto(repo.save(p));
+    }
+
+    public void deletePatient(Long id) {
+        repo.deleteById(id);
     }
 
     private PatientProfileDTO toDto(Patient p) {

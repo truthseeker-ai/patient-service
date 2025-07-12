@@ -1,9 +1,9 @@
-package com.hospital.patientservice.controller;
+package com.hospital.patientservice.Controller;
 
 import com.hospital.patientservice.dto.*;
 import com.hospital.patientservice.service.PatientService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,29 +12,37 @@ import java.util.List;
 @RequestMapping("/api/patients")
 @RequiredArgsConstructor
 public class PatientController {
-
-    private final PatientService patientService;
+    private final PatientService svc;
 
     @PostMapping("/auth/register")
-    public ResponseEntity<PatientProfileDTO> register(@RequestBody RegistrationRequest request) {
-        return ResponseEntity.ok(patientService.register(request));
+    public ResponseEntity<PatientProfileDTO> register(@RequestBody RegistrationRequest req) {
+        return new ResponseEntity<>(svc.register(req), HttpStatus.CREATED);
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<PatientProfileDTO> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok(patientService.login(request));
+    public PatientProfileDTO login(@RequestBody LoginRequest req) {
+        return svc.login(req);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<DoctorDTO>> searchDoctors(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String specialization) {
-        return ResponseEntity.ok(patientService.searchDoctors(name, specialization));
-    }
-
-    //Get all patients
     @GetMapping("")
-    public ResponseEntity<List<PatientProfileDTO>> getAllPatients() {
-        return ResponseEntity.ok(patientService.getAllPatients());
+    public List<PatientProfileDTO> listAll() {
+        return svc.getAllPatients();
+    }
+
+    @GetMapping("/{id}")
+    public PatientProfileDTO getOne(@PathVariable Long id) {
+        return svc.getPatient(id);
+    }
+
+    @PutMapping("/{id}")
+    public PatientProfileDTO update(@PathVariable Long id,
+                                    @RequestBody RegistrationRequest req) {
+        return svc.updatePatient(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        svc.deletePatient(id);
+        return ResponseEntity.noContent().build();
     }
 }
